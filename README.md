@@ -50,7 +50,7 @@ AI is used where it creates operational leverage, especially in information extr
 
 ---
 
-# Task 1 Outcome  
+# Phase 1 Outcome  
 ## AI Powered Automation Solution Design
 
 The first part of this project focuses on designing an AI driven onboarding automation architecture.
@@ -157,7 +157,7 @@ Jira, Trello, or ClickUp for task management
 
 ---
 
-# Task 2 Outcome  
+# Phase 2 Outcome  
 ## Implementation Demo and Prototype Scaffold
 
 The second part of this project focuses on creating a working scaffold or prototype of the proposed automation.

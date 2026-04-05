@@ -1,0 +1,212 @@
+{
+    "name": "AI Onboarding Automation Scaffold",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "onboarding-intake",
+                "options": {}
+            },
+            "id": "1",
+            "name": "Webhook: Intake Form",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "chat",
+                "model": "gpt-4o-mini",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are an Onboarding Assistant. Extract structured data from {{ $json.body }} and return a JSON object."
+                    }
+                ],
+                "options": {
+                    "response_format": "json_object"
+                }
+            },
+            "id": "2",
+            "name": "OpenAI: Data Extraction",
+            "type": "n8n-nodes-base.openAi",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "application": "app_airtable_id",
+                "table": "Onboarding Tracker",
+                "fields": {
+                    "Name": "={{ $json.employee.name }}",
+                    "Dept": "={{ $json.employee.dept }}",
+                    "Status": "Intake Complete"
+                },
+                "options": {}
+            },
+            "id": "3",
+            "name": "Airtable: Create Record",
+            "type": "n8n-nodes-base.airtable",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $json.employee.dept }}",
+                            "value2": "Engineering"
+                        }
+                    ]
+                }
+            },
+            "id": "4",
+            "name": "Filter: Dept Routing",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "chat",
+                "model": "gpt-4o-mini",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Generate a personalized onboarding guide for {{ $json.employee.name }} in the {{ $json.employee.dept }} department."
+                    }
+                ]
+            },
+            "id": "5",
+            "name": "OpenAI: Personalization",
+            "type": "n8n-nodes-base.openAi",
+            "typeVersion": 1,
+            "position": [
+                1050,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "channel": "onboarding-alerts",
+                "text": "New Hire Alert: {{ $json.employee.name }} ({{ $json.employee.dept }}) has completed intake. IT/HR tasks have been assigned.",
+                "options": {}
+            },
+            "id": "6",
+            "name": "Slack: Manager Alert",
+            "type": "n8n-nodes-base.slack",
+            "typeVersion": 1,
+            "position": [
+                1250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "text": "Welcome to the team, {{ $json.employee.name }}! Check your email for your personalized onboarding plan.",
+                "options": {}
+            },
+            "id": "7",
+            "name": "Slack: Welcome DM",
+            "type": "n8n-nodes-base.slack",
+            "typeVersion": 1,
+            "position": [
+                1250,
+                450
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook: Intake Form": {
+            "main": [
+                [
+                    {
+                        "node": "OpenAI: Data Extraction",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI: Data Extraction": {
+            "main": [
+                [
+                    {
+                        "node": "Airtable: Create Record",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Airtable: Create Record": {
+            "main": [
+                [
+                    {
+                        "node": "Filter: Dept Routing",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Filter: Dept Routing": {
+            "main": [
+                [
+                    {
+                        "node": "OpenAI: Personalization",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Slack: Manager Alert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI: Personalization": {
+            "main": [
+                [
+                    {
+                        "node": "Slack: Manager Alert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Slack: Manager Alert": {
+            "main": [
+                [
+                    {
+                        "node": "Slack: Welcome DM",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    }
+}
